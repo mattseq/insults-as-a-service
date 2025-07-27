@@ -1,7 +1,8 @@
 import os
 import discord
 import random
-from insult_model import generate_async_insult
+# from insult_model import generate_async_insult
+from insult_request import generate_async_insult
 from chat_memory import ChatMemory
 from dotenv import load_dotenv
 
@@ -26,11 +27,12 @@ async def on_message(message):
     memory.add_message(message.author.display_name, message.content)
 
     # chance to reply with an insult
-    if random.random() < 1.00:
+    if random.random() < 1.0:
         history = memory.get_formatted_history()
         try:
             insult = await generate_async_insult(history)
-            await message.channel.send(insult)
+            if not insult == "":
+                await message.channel.send(insult)
         except Exception as e:
             print(f"Error generating insult: {e}")
 
