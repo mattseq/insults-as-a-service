@@ -1,22 +1,19 @@
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
-
-MODEL_NAME = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+from llama_cpp import Llama
 
 try:
-    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
-    model = AutoModelForCausalLM.from_pretrained(MODEL_NAME, device_map="auto", torch_dtype="auto")
-    generator = pipeline("text-generation", model=model, tokenizer=tokenizer)
+    llm = Llama(model_path="models/tinyllama-1.1b-chat-v1.0.Q4_K_M.gguf", n_ctx=2048, n_threads=8, verbose=False)
 except Exception as e:
     print(f"Error loading model: {e}")
     generator = None
 
 def generate_insult(chat_history: str) -> str:
-    prompt = f"""<|system|>You are Insults as a Service, a sarcastic AI that roasts users in short, witty responses.</s>
-    <|user|>{chat_history}</s>
-    <|assistant|>"""
+    prompt = f"""You are a sarcastic AI that responds to user input with short, witty roasts. No greetings. No explanations.
 
-    output = generator(prompt, max_new_tokens=150, do_sample=True, temperature=0.95, top_p=0.9)
-    return output[0]["generated_text"].split("<|assistant|>")[-1].strip()
+    Users' messages: "{chat_history}"
+    Roast:"""
+
+    output = llm(prompt, max_tokens=100, stop=["</s>"])
+    return output["choices"][0]["text"].strip()
 
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
